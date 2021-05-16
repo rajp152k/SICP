@@ -41,3 +41,42 @@
            (square (product identity 4 2 (* 2 n))))
         (square (product identity 3 2 (+ 1 (* 2 n)))))
      4.0))
+
+;1.32
+(define (accumulate combiner initial fn a next b)
+  (define (acc-res curr res)
+    (if (> curr b)
+        res
+        (acc-res (next curr)
+                 (combiner (fn curr) res))))
+  (acc-res a initial))
+
+(define (acc-product fn a step b)
+  (accumulate (lambda (x y) (* x y))
+              1
+              fn
+              a
+              (lambda (x) (+ x step))
+              b))
+
+(define (acc-sum fn a step b)
+  (accumulate (lambda (x y) (+ x y))
+              0
+              fn
+              a
+              (lambda (x) (+ x step))
+              (b)))
+
+;1.33
+
+(define (filtered-accumulate combiner fltr initial fn a next b)
+  (define (filter-compute-combine curr res)
+    (if (fltr curr)
+        (combiner (fn curr) res)
+        res))
+  (define (acc-res curr res)
+    (if (> curr b)
+        res
+        (acc-res (next curr)
+                 (filter-compute-combine curr res))))
+  (acc-res a initial))
