@@ -35,6 +35,7 @@
   (product identity 1 1 n))
 
 (define (square x) (* x x))
+
 (define (pi  n)
   (* (/ (* 2
            (+ (* 2 n) 2)
@@ -80,3 +81,102 @@
         (acc-res (next curr)
                  (filter-compute-combine curr res))))
   (acc-res a initial))
+
+;1.35
+
+(define (fixed-point-find fn fg thresh)
+  "find the fixed point of fn(x) with first guess as fg"
+  (define (close-enough? a b)
+    (< (abs (- a
+               b))
+       thresh))
+  (define (average a b)
+    (/ (+ a
+          b)
+       2))
+  (define (fixed-point-iter curr)
+    (let ((next (fn curr)))
+      (cond [(close-enough? next curr) curr]
+            [#t (fixed-point-iter (average next curr))])))
+  (fixed-point-iter fg))
+
+;;(fixed-point-find (lambda (x) (+ 1.0 (/ 1 x))) 1 0.00001)
+
+;1.36
+
+
+(define (logged-fixed-point-find fn fg thresh)
+  "find the fixed point of fn(x) with first guess as fg"
+  (define (close-enough? a b)
+    (< (abs (- a
+               b))
+       thresh))
+  (define (average a b)
+    (/ (+ a
+          b)
+       2))
+  (define (fixed-point-iter curr)
+    (let ((next (fn curr)))
+      (cond [(close-enough? next curr) (let ()
+                                         (display "found fixed point ")
+                                         (print curr)
+                                         (newline)
+                                         curr)]
+            [#t (fixed-point-iter (let ((avg (average next curr)))
+                                    (display "guessing ")
+                                    (print avg)
+                                    (newline)
+                                    avg))])))
+  (fixed-point-iter fg))
+
+
+;1.37
+
+(define (cont-frac n d k)
+  (define (cont-frac-sub-exp curr)
+    (if (= curr k)
+        (/ (n curr)
+           (d curr))
+        (/ (n curr)
+           (+ (d curr)
+              (cont-frac-sub-exp (+ curr 1))))))
+  (cont-frac-sub-exp 1))
+
+(define (cont-frac-iter n d k)
+  (define (cont-frac-sub-cache curr res)
+    (if (= curr 0)
+        res
+        (cont-frac-sub-cache (- curr 1)
+                             (/ (n curr)
+                                (+ (d curr)
+                                   res)))))
+  (cont-frac-sub-cache k 0))
+
+
+;1.38
+
+(define (cont-frac-guess-e approx-extent)
+  (+ 2
+     (let ((n (lambda (x) 1.0))
+           (d (lambda (x)
+                (cond [(zero? (remainder (+ x 1) 3)) (* 2 (quotient (+ x 1) 3))]
+                      [#t 1]))))
+       (cont-frac-iter n d approx-extent))))
+
+
+;1.39
+
+(define (tan-cf x k)
+  "compute tan within -pi/2 to pi/2"
+  (define (cont-frac-iter-neg n d k)
+    (define (cont-frac-sub-cache curr res)
+      (if (= curr 0)
+          res
+          (cont-frac-sub-cache (- curr 1)
+                               (/ (n curr)
+                                  (- (d curr)
+                                     res)))))
+    (cont-frac-sub-cache k 0.0))
+  (let ((n (lambda (k) (expt x k)))
+        (d (lambda (k) (- (* 2 k) 1))))
+    (cont-frac-iter-neg n d k)))
