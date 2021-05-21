@@ -153,6 +153,10 @@
     (λ (x)
       ((m f) ((n f) x)))))
 
+(define (church-mul m n)
+  (λ (f)
+    (λ (x)
+      ((m (n f)) x))))
 
 (define (translate-to-norm church)
   "A necessity, sanity is ..."
@@ -160,3 +164,81 @@
 
 ;(translate-to-norm two)
 ;(translate-to-norm (church-add one two))
+;(translate-to-norm (church-mul (church-add one two) two))
+
+;2.7
+(define (make-interval a b)
+  (cons a b))
+
+(define (ub i)
+  "upper bound"
+  (cdr i))
+
+(define (lb i)
+  "lower bound"
+  (car i))
+
+;2.8
+
+(define (sub-interval i1 i2)
+  (make-interval (- (lb i1)
+                    (ub i2))
+                 (- (ub i1)
+                    (lb i2))))
+
+;prereqs
+(define (mul-interval a b)
+  (let ((p1 (* (lb a) (lb b)))
+        (p2 (* (lb a) (ub b)))
+        (p3 (* (ub a) (lb b)))
+        (p4 (* (ub a) (ub b))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+;2.10
+
+(define (spans-across? num interval)
+  (and ((<= (lb interval) num)
+        (>= (ub interval) num))))
+
+(define (spans-zero? i) (spans-across? 0 i))
+
+(define (div-interval a b)
+  (if (spans-zero? b)
+      "Zero division error"
+      (mul-interval
+       a
+       (let ((lower (min (/ 1 (lb b)) (/ 1 (ub b))))
+             (upper (max (/ 1 (lb b)) (/ 1 (ub b)))))
+         (make-interval lower upper)))))
+
+
+;2.11
+
+; 3 possibilites for one interval: 9 for two
+; when both span zero : more than two multiplications
+; otherwise two multiplications with certainty
+
+
+;2.12
+
+
+(define (make-center-percent c p)
+  (let ((w (* c (/ p 100))))
+    (make-interval (- c w)
+                   (+ c w))))
+
+(define (center i)
+  (/ (+ (lb i)
+        (ub i))
+     2))
+
+(define (percent i)
+  (* 50 
+     (/ (- (ub i)
+           (lb i))
+        (center i))))
+
+;2.13
+; addition of individual tolerances.
+; expand and ignore small terms
