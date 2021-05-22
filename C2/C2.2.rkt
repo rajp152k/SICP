@@ -1,4 +1,4 @@
-#lang racket/base
+#lang racket
 
 ;2.17
 (define (last-pair lis)
@@ -168,3 +168,74 @@
         (append rest (map (λ (l) (cons (car s) l))
                           rest)))))
 ;; collating two types of subsets at a time : with and without the head
+
+;prereqs
+
+(define accumulate foldr)
+
+;2.33
+
+
+(define (acc-map fn seq)
+  (accumulate (λ (x y)
+                (cons (fn x)
+                      y))
+              '()
+              seq))
+
+(define (acc-append l1 l2)
+  (accumulate cons l2 l1))
+
+(define (acc-length lis)
+  (accumulate (λ (in acc) (+ acc 1))
+              0
+              lis))
+
+;2.34
+(define (horner-eval x coefficient-sequence)
+  (accumulate (λ (this-coeff higher-terms)
+                (+ this-coeff
+                   (* x higher-terms)))
+              0
+              coefficient-sequence))
+
+;2.35
+(define (count-leaves t)
+  (accumulate +
+              0
+              (map (λ (subtree)
+                     (cond [(null? subtree) 0]
+                           [(not (pair? subtree)) 1]
+                           [#t (count-leaves subtree)]))
+                   t)))
+
+
+;2.36
+(define (accumulate-n op initial seqs)
+  (if (null? (car seqs))
+      '()
+      (cons (accumulate op initial
+                        (map (λ (lis) (car lis)) seqs))
+            (accumulate-n op initial
+                          (map (λ (lis) (cdr lis)) seqs)))))
+
+;2.37
+(define (dot-product u v)
+  (accumulate + 0 (map * u v)))
+
+(define (matrix-*-vector m v)
+  (map (λ (row) (dot-product row v)) m))
+
+(define (transpose mat)
+  (accumulate-n cons '() mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (λ (vect) (matrix-*-vector cols vect)) m)))
+
+;2.39
+(define (foldl-reverse seq)
+  (foldl (λ (x y) (cons x y)) '() seq))
+
+(define (foldr-reverse seq)
+  (foldr (λ (x y) (append y (list x))) '() seq))
