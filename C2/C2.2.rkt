@@ -239,3 +239,103 @@
 
 (define (foldr-reverse seq)
   (foldr (λ (x y) (append y (list x))) '() seq))
+
+;2.40
+(define (unique-pairs s)
+  (foldl append '()
+         (map (λ (i)
+                (map (λ (j) (list i j))
+                     (filter (λ (j) (< j i)) s)))
+              s)))
+
+(define (prime? p)
+  (define (check-cache curr)
+    (cond [(> (* curr curr) p)
+           #t]
+          [(= (remainder p curr)
+              0)
+           #f]
+          [#t (check-cache (+ curr 1))]))
+  (if (<= p 1)
+      #f
+      (check-cache 2)))
+
+
+(define (prime-sum-pairs s)
+  (define (pair-sum p) (+ (car p) (cadr p)))
+  (map (λ (p) (list (car p) (cadr p) (pair-sum p)))
+       (filter (λ (p) (prime? (pair-sum p)))
+               (unique-pairs s))))
+
+;2.41
+(define (distinct-ordered-triples n s)
+  (define lis (build-list n identity))
+  (filter (λ (t) (= (foldl + 0 t) s))
+          (foldl append '()
+                 (map (λ (i)
+                        (foldl append '()
+                               (map (λ (j)
+                                      (map (λ (k) (list i j k))
+                                           (filter (λ (e) (< e j)) lis)))
+                                    (filter (λ (e) (< e i)) lis))))
+                      lis))))
+
+
+;2.42
+
+(define (flatmap proc lis)
+  (foldl append '()
+         (map proc lis)))
+
+(define (queens board-size)
+  (define pos (build-list board-size (λ (x) (+ x 1))))
+  (define empty-board '())
+  (define (place-queen x y) (cons x y)) ; x = row ; y = col
+  (define (diag-safe p1 p2)
+    (not (= (abs (- (car p1)
+                    (car p2)))
+            (abs (- (cdr p1)
+                    (cdr p2))))))
+  (define (row-safe p1 p2)
+    (not (= (car p1)
+            (car p2))))
+  (define (safe? k positions)
+    (define kth (car positions))
+    (define (safe-last last)
+      (and (diag-safe kth last)
+           (row-safe kth last)))
+    (define (safe-iter left-positions)
+      (if (null? left-positions)
+          #t
+          (and (safe-last (car left-positions))
+               (safe-iter (cdr left-positions)))))
+    (safe-iter (cdr positions)))
+  (define (adjoin-position new-row k rest-of-queens)
+    (cons (place-queen new-row k) rest-of-queens))
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (λ (positions)
+           (safe? k positions))
+         (flatmap
+          (λ (rest-of-queens)
+            (map (λ (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 pos))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+;2.43
+;solving the sub problem mulitple times rather than once
+;(p 8) 1x
+;(p 7) 8x
+;(p 6) 64x
+;(p 1) (exp 8 7)x
+; og : once all -> T
+; also Tk = 8*S(k-1) + T(k-1)
+; Sk = 8*S(k-1)
+; Tk = (8^k) + T(k-1)
+; T = (sum (8^0) to (8^8))
+; new -> T'
+; T' = 8*(T(k-1) + S(k-1))
