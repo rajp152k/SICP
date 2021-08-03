@@ -69,13 +69,13 @@
 (define (exponent e) (caddr e))
 (define (make-exponent b e)
   (cond [(eq? e 0) 1]
-         [(eq? e 1) b]
-         [#t (list '** b e)]))
+        [(eq? e 1) b]
+        [#t (list '** b e)]))
 
 (define (deriv expr var)
   (cond [(number? expr) 0]
         [ (variable? expr) (if (same-variable? expr var)
-                              1 0)]
+                               1 0)]
         [(sum? expr) (make-sum (deriv (addend expr) var)
                                (deriv (augend expr) var))]
         [(product? expr) (make-sum (make-prod (multiplier expr) (deriv (multiplicand expr) var))
@@ -84,3 +84,47 @@
                                                       (make-exponent (base expr) (make-sum (exponent expr) -1)))
                                            (deriv (base expr) var))]
         [#t (error "invalid expression encountered" expr)]))
+
+;prereqs
+
+(define (element-of-set? x s)
+  (cond [(null? s) #f]
+        [(equal? x (car s)) #t]
+        [else (element-of-set? x (cdr s))]))
+
+(define (adjoin-element x s)
+  (if (element-of-set? x s)
+      s
+      (cons x s)))
+
+(define (intersection-of-sets s1 s2)
+  (cond [(or (null? s1) (null? s2)) '()]
+        [(element-of-set? (car s2) s1)
+         (cons (car s2) (intersection-of-sets s1 (cdr s2)))]
+        [else (intersection-of-sets s1 (cdr s2))]))
+
+;2.59
+(define (union-of-sets s1 s2)
+  (cond [(null? s1) s2]
+        [(null? s2) s1]
+        [else (union-of-sets
+               (adjoin-element (car s2) s1)
+               (cdr s2))]))
+
+;2.60
+; - cheaper union
+; - expensive intersection (if memory less)
+
+;2.61
+; direct usage of element-of-set
+
+;2.62
+; if any null, return another
+; if equal cars, cons that and recurse on cdrs
+; if one less, cons that and recurse with only that list cdr'd.
+
+;2.63
+;a) both are inorder traversals
+;b) the second one grows more slowly than the first one
+; first one : Tn = 2*T(n/2) +cn (n occurs due to the nature of append)
+; second one : Tn = 2*T(n/2) + c
